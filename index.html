@@ -645,16 +645,10 @@
             const handleExportHTML = () => {
                 const currentState = { projectionYears, discountRate, landAreas, costSettings, rentSettings, profitDistSettings, fundingSettings, savedAt: Date.now() };
                 
-                let stateScript = document.getElementById('app-state-data');
-                if (!stateScript) {
-                    stateScript = document.createElement('script');
-                    stateScript.id = 'app-state-data';
-                    stateScript.type = 'application/json';
-                    document.head.appendChild(stateScript);
-                }
-                stateScript.textContent = JSON.stringify(currentState);
-
-                const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+                // التصدير من نسخة نظيفة للصفحة: بدون الكود المُترجم ولا المحتوى المرسوم، حتى لا يعمل التطبيق مرتين عند فتح الملف المنشور
+                const stateJson = JSON.stringify(currentState).replace(/</g, '\\u003c');
+                const baseHtml = window.__BW_PRISTINE_HTML__ || document.documentElement.outerHTML;
+                const htmlContent = "<!DOCTYPE html>\n" + baseHtml.replace(/(<script id="app-state-data" type="application\/json">)[\s\S]*?(<\/script>)/, (m, a, b) => a + stateJson + b);
                 const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -3155,5 +3149,6 @@
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
+    <script>window.__BW_PRISTINE_HTML__ = document.documentElement.outerHTML;</script>
 </body>
 </html>
