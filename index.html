@@ -585,29 +585,29 @@
                 return 'opacity-20 grayscale blur-[2px] transition-all duration-500';
             };
 
-            const [projectionYears, setProjectionYears] = useState(initialSavedState.projectionYears || 10);
+            const [projectionYears, setProjectionYears] = useState(initialSavedState.projectionYears || 5);
             const [discountRate, setDiscountRate] = useState(initialSavedState.discountRate || 10);
             const [fundingSettings, setFundingSettings] = useState(initialSavedState.fundingSettings || { type: 'external', bwAmount: 0 });
             
             const [landAreas, setLandAreas] = useState(initialSavedState.landAreas || {
-                width: 30, totalDepth: 30, parkingDepth: 6, buildingDepth: 10, sideSetback: 0, shopWidth: 5, hasStairs: true, stairsWidth: 2.5
+                width: 30, totalDepth: 30, parkingDepth: 6, buildingDepth: 10, sideSetback: 2, shopWidth: 4, hasStairs: false, stairsWidth: 2.5
             });
 
             const [costSettings, setCostSettings] = useState(initialSavedState.costSettings || {
-                skeletonCostPerSqm: 800, finishingCostPerSqm: 1000, basementSkeletonCostPerSqm: 800, basementFinishingCostPerSqm: 600, landscapeCostPerSqm: 600, landscapeFurnishingCost: 100000, rooftopFinishingCostPerSqm: 0, rooftopFurnishingCost: 0,
-                feasibilityTotal: 15000, designTotal: 40000, supervisionTotal: 30000, permitTotal: 15000,
-                insuranceTotal: 5000, mgmtTotal: 20000, utilityTotal: 25000, advertisingFenceTotal: 25000, otherIndirect: [], reservePct: 5 
+                skeletonCostPerSqm: 650, finishingCostPerSqm: 850, basementSkeletonCostPerSqm: 650, basementFinishingCostPerSqm: 550, landscapeCostPerSqm: 250, landscapeFurnishingCost: 100000, rooftopFinishingCostPerSqm: 0, rooftopFurnishingCost: 0,
+                feasibilityTotal: 10000, designTotal: 50000, supervisionTotal: 30000, permitTotal: 20000,
+                insuranceTotal: 10000, mgmtTotal: 30000, utilityTotal: 50000, advertisingFenceTotal: 25000, otherIndirect: [], reservePct: 3 
             });
 
             const [rentSettings, setRentSettings] = useState(initialSavedState.rentSettings || {
-                shopSales: {}, defaultDailySales: 3000, revenueSharePct: 10, occupancyRate: 90, 
-                annualLandRent: 150000, annualOtherOpex: 60000,
+                shopSales: { 0: 6000, 1: 5000, 2: 4000, 3: 4500, 4: 4000, 5: 5000 }, defaultDailySales: 3000, revenueSharePct: 10, occupancyRate: 90, 
+                annualLandRent: 350000, annualOtherOpex: 220000,
                 leasingScenario: 'revenue_share', fixedRentParams: {}, defaultFixedRent: 15000
             });
 
             const [profitDistSettings, setProfitDistSettings] = useState(initialSavedState.profitDistSettings || {
-                paybackRatePct: 70, investorPrePaybackShare: 20, bwPrePaybackShare: 10, 
-                investorPostPaybackShare: 50, bwPostPaybackShare: 50,
+                paybackRatePct: 100, investorPrePaybackShare: 0, bwPrePaybackShare: 0, 
+                investorPostPaybackShare: 60, bwPostPaybackShare: 40,
                 exitStrategy: 'full_duration', targetRoiPct: 100
             });
 
