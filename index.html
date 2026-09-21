@@ -174,6 +174,21 @@
             return null;
         };
 
+        // ترميز بيانات الدراسة داخل الرابط لمشاركتها مع أي شخص يفتح الرابط
+        const encodeStateToHash = (state) => {
+            try { return btoa(unescape(encodeURIComponent(JSON.stringify(state)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); } catch (e) { return ''; }
+        };
+        const decodeStateFromHash = (hash) => {
+            try {
+                const m = (hash || '').match(/[#&]data=([^&]+)/);
+                if (!m) return null;
+                let b64 = m[1].replace(/-/g, '+').replace(/_/g, '/');
+                while (b64.length % 4) b64 += '=';
+                const parsed = JSON.parse(decodeURIComponent(escape(atob(b64))));
+                return parsed && typeof parsed === 'object' ? parsed : null;
+            } catch (e) { return null; }
+        };
+
         const sharePercents = (values, decimals = 2) => {
             const clean = values.map(v => Math.max(0, safeNum(v)));
             const total = clean.reduce((a, b) => a + b, 0);
@@ -519,16 +534,24 @@
 
         const App = () => {
             let initialSavedState = {};
+            let loadedFromLink = false;
             try {
-                const local = localStorage.getItem('buildwise_plaza_data');
-                if (local) {
-                    initialSavedState = JSON.parse(local);
+                const fromLink = typeof window !== 'undefined' && window.location ? decodeStateFromHash(window.location.hash) : null;
+                if (fromLink) {
+                    initialSavedState = fromLink;
+                    loadedFromLink = true;
                 } else {
+                    let localState = null, embeddedState = null;
+                    const local = localStorage.getItem('buildwise_plaza_data');
+                    if (local) localState = JSON.parse(local);
                     const stateEl = document.getElementById('app-state-data');
                     if (stateEl && stateEl.textContent) {
                         const parsed = JSON.parse(stateEl.textContent);
-                        if (Object.keys(parsed).length > 0) initialSavedState = parsed;
+                        if (Object.keys(parsed).length > 0) embeddedState = parsed;
                     }
+                    // تُعتمد النسخة الأحدث حفظاً، حتى لا تغطي بيانات قديمة في المتصفح على النسخة المنشورة
+                    if (localState && embeddedState) initialSavedState = safeNum(embeddedState.savedAt) > safeNum(localState.savedAt) ? embeddedState : localState;
+                    else initialSavedState = localState || embeddedState || {};
                 }
             } catch (e) { console.error("Could not load saved state", e); }
 
@@ -620,7 +643,7 @@
             }, []);
 
             const handleExportHTML = () => {
-                const currentState = { projectionYears, discountRate, landAreas, costSettings, rentSettings, profitDistSettings, fundingSettings };
+                const currentState = { projectionYears, discountRate, landAreas, costSettings, rentSettings, profitDistSettings, fundingSettings, savedAt: Date.now() };
                 
                 let stateScript = document.getElementById('app-state-data');
                 if (!stateScript) {
@@ -644,11 +667,29 @@
             };
 
             const handleSaveData = () => {
-                const currentState = { projectionYears, discountRate, landAreas, costSettings, rentSettings, profitDistSettings, fundingSettings };
+                const currentState = { projectionYears, discountRate, landAreas, costSettings, rentSettings, profitDistSettings, fundingSettings, savedAt: Date.now() };
                 localStorage.setItem('buildwise_plaza_data', JSON.stringify(currentState));
+                try { window.history.replaceState(null, '', window.location.pathname + window.location.search + '#data=' + encodeStateToHash(currentState)); } catch (e) {}
                 setSaveMessage('تم الحفظ بنجاح');
                 setTimeout(() => setSaveMessage(''), 3000);
             };
+
+            const handleShareLink = () => {
+                const currentState = { projectionYears, discountRate, landAreas, costSettings, rentSettings, profitDistSettings, fundingSettings, savedAt: Date.now() };
+                localStorage.setItem('buildwise_plaza_data', JSON.stringify(currentState));
+                const url = window.location.origin + window.location.pathname + window.location.search + '#data=' + encodeStateToHash(currentState);
+                try { window.history.replaceState(null, '', url); } catch (e) {}
+                const done = () => { setSaveMessage('تم نسخ رابط المشاركة'); setTimeout(() => setSaveMessage(''), 3500); };
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(url).then(done).catch(() => { window.prompt('انسخ رابط الدراسة:', url); });
+                } else {
+                    window.prompt('انسخ رابط الدراسة:', url);
+                }
+            };
+
+            useEffect(() => {
+                if (loadedFromLink) { setSaveMessage('تم تحميل بيانات الدراسة من الرابط'); setTimeout(() => setSaveMessage(''), 4000); }
+            }, []);
 
             const calc = useMemo(() => {
                 const width = Math.max(0, safeNum(landAreas.width));
@@ -1151,6 +1192,10 @@
                            </div>
                            <div className="flex items-center gap-3">
                                {saveMessage && <span className="text-sm font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg animate-pulse hidden sm:block">{saveMessage}</span>}
+                               <button onClick={handleShareLink} className="flex items-center gap-2 px-4 py-2 bg-[#FFFAF3] text-[#8C3B19] hover:bg-[#BD8F3F] hover:text-white rounded-xl font-bold transition-all border border-[#BD8F3F]/40 shadow-sm text-sm">
+                                   <Icon name="share-2" className="w-4 h-4" />
+                                   <span className="hidden sm:inline">مشاركة الرابط</span>
+                               </button>
                                <button onClick={handleSaveData} className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-xl font-bold transition-all border border-emerald-200 shadow-sm text-sm">
                                    <Icon name="save" className="w-4 h-4" />
                                    <span className="hidden sm:inline">حفظ البيانات</span>
